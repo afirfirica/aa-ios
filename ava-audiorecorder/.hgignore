@@ -1,0 +1,6 @@
+syntax: glob
+xcuserdata
+.DS_Store
+.idea
+lib
+AudioRecorder.xccheckout
