@@ -1,0 +1,1 @@
+link ../../../OCMock/Source/OCMock/OCMock.h

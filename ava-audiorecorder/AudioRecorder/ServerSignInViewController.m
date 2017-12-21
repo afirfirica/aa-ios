@@ -319,11 +319,7 @@
                                                    }
                                                    failure:^(NSURLSessionDataTask *task, NSError *error) {
                                                        [self enableUserInteraction];
-
-                                                       NSString *errorDescription = [error.userInfo valueForKey:NSLocalizedDescriptionKey];
-                                                       UIAlertView *connectAlertView = [[UIAlertView alloc] initWithTitle:@"Alert!" message:errorDescription delegate:self cancelButtonTitle:@"Okay" otherButtonTitles: nil];
-                                                      
-                                                       [connectAlertView show];
+                                                       //[UIAlertView showAlertViewForTaskWithErrorOnCompletion:task delegate:nil];
                                                    }];
 
     

@@ -39,6 +39,8 @@ static NSInteger lastSelectedCellIndex;
         NSInteger selectedCellIndex;
         DatabaseManager *dbManager;
     AudioData *audioData;
+    UIAlertView  * oldRcordNotice;
+    
 }
 
 @property (strong, nonatomic) IBOutlet UITableView *recordingsTableView;
@@ -119,6 +121,9 @@ static NSInteger lastSelectedCellIndex;
     }
     else {
         _listLabel.hidden = YES;
+        
+        
+        
         //self.navigationItem.leftBarButtonItem = self.editButtonItem;//COMMENTED OUT TO ELIMINATE BUTTON ON UI
     }
     [self.recordingsTableView reloadData];
@@ -184,6 +189,8 @@ static NSInteger lastSelectedCellIndex;
     [self.navigationItem setHidesBackButton:YES];
     [self.navigationItem setTitle:@"AVA"];
     self.title = @"AVA";
+
+
 }
 
 - (void)endEditing {
@@ -278,6 +285,37 @@ static NSInteger lastSelectedCellIndex;
             if (success && [Passcode isPasscodeSet]) {
                 NSLog(@"PASSWORDS MATCH");
                 [self dismissViewControllerAnimated:YES completion:nil];
+                
+                NSArray *listArray = [dbManager fetchAudioDetailsFromDatabase];
+                if(!fileArray)
+                    fileArray = [[NSMutableArray alloc]init];
+                else
+                    [fileArray removeAllObjects];
+                
+                [fileArray addObjectsFromArray:listArray];
+                
+                if([self checkingOldRecords]){
+                    
+                    oldRcordNotice = [[UIAlertView alloc] initWithTitle:@"Notice" message:@"There are recordings that were recorded over two weeks ago but never uploaded. Please upload recordings to AVA soon after they are recorded." delegate:self cancelButtonTitle:@"Okay" otherButtonTitles: nil];
+                    
+                    [oldRcordNotice show];
+                    
+                    
+                }else{
+                    
+                    if([self checkingUpLoadedRecords]){
+                        
+                        UIAlertView  *alertView = [[UIAlertView alloc] initWithTitle:@"Notice" message:@"There are recordings that were uploaded over two weeks ago and are still saved here. Please delete recordings after you are sure they have been successfully uploaded to AVA." delegate:self cancelButtonTitle:@"Okay" otherButtonTitles: nil];
+                        
+                        [alertView show];
+                        
+                        
+                    }
+                    
+                }
+                
+                
+                
             }else{
                 
                 passCodeConfig.identifier = @"";
@@ -285,6 +323,61 @@ static NSInteger lastSelectedCellIndex;
                 //NSLog(@"ERROR:%@", error.localizedDescription);
             }
         }];
+}
+
+
+-(BOOL) checkingOldRecords{
+    
+    AudioData *tmpAudio;
+
+    if(fileArray.count > 0){
+        
+        for (int i = 0; i < fileArray.count; i++) {
+            
+            tmpAudio = (AudioData *) [fileArray objectAtIndex:i];
+            
+            if(!tmpAudio.uploadStatus){
+
+                if(tmpAudio.createdDate.weeksAgo >= 2){
+                    
+                    return YES;
+                }
+                
+                
+            }
+        }
+        
+        
+    }
+    
+    
+    return NO;
+}
+
+-(BOOL) checkingUpLoadedRecords{
+    
+    AudioData *tmpAudio;
+    
+    if(fileArray.count > 0){
+        
+        for (int i = 0; i < fileArray.count; i++) {
+            
+            tmpAudio = (AudioData *) [fileArray objectAtIndex:i];
+            
+            if(tmpAudio.uploadStatus){
+
+                if(tmpAudio.createdDate.weeksAgo >= 2){
+                    
+                    return YES;
+                }
+            }
+        }
+        
+        
+    }
+    
+    
+    return NO;
 }
 
 -(void) enterPasscode{
@@ -374,9 +467,6 @@ static NSInteger lastSelectedCellIndex;
         NSString *timeAgo = createdDate.shortTimeAgoSinceNow;
         
         customCell.recordDate.text = [NSString stringWithFormat:@"%@ ago", timeAgo];
-        
-        
-       
        
         
 
@@ -688,6 +778,18 @@ static NSInteger lastSelectedCellIndex;
 -(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
 
+    if(alertView == oldRcordNotice){
+        
+        if([self checkingUpLoadedRecords]){
+            
+            UIAlertView  *alertView = [[UIAlertView alloc] initWithTitle:@"Notice" message:@"There are recordings that were uploaded over two weeks ago and are still saved here. Please delete recordings after you are sure they have been successfully uploaded to AVA." delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            
+            [alertView show];
+            
+            
+        }
+    }
+    
     if([alertView.title isEqualToString:[NSString stringWithFormat:MSG_DELETE_FILE,_data.name]])
     {
         if(buttonIndex == INDEX_ONE)
